@@ -14,13 +14,18 @@ template <typename T>
 struct Producer {
   void operator()() {
     for (int i = 0; i < 10; i++) {
-      Item item('A' + static_cast<char>(i));
+      T item('A' + static_cast<char>(i));
       queue.push(item);
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      std::this_thread::sleep_for(std::chrono::milliseconds(delay));
     }
   }
 
   ThreadSaveQueue<T>& queue;
+  std::chrono::milliseconds delay;
+
+  Producer(ThreadSaveQueue<T>& queue, const int i)
+    : queue(queue),
+      delay(std::chrono::milliseconds(i)) {}
 };
 
 template <typename T>
@@ -31,7 +36,7 @@ struct Consumer {
         break;
       }
       for (int i = 0; i < 10; i++) {
-        const Item item = queue.pop();
+        const T item = queue.pop();
         std::cout << item.c << std::endl;
       }
     }
@@ -43,10 +48,12 @@ struct Consumer {
 int main(int argc, char* argv[]) {
   ThreadSaveQueue<Item> queue;
 
-  Producer producer1(queue);
-  Producer producer2(queue);
-  Producer producer3(queue);
+  /// 创建生产者
+  Producer producer1(queue, 1);
+  Producer producer2(queue, 5);
+  Producer producer3(queue, 6);
 
+  /// 创建消费者
   Consumer consumer(queue);
 
   std::thread producerThread1(producer1);
@@ -56,8 +63,6 @@ int main(int argc, char* argv[]) {
   producerThread1.join();
   producerThread2.join();
   producerThread3.join();
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
   std::thread consumerThread1(consumer);
   consumerThread1.join();
