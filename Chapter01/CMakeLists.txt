@@ -1,7 +1,10 @@
 add_subdirectory(src)
 
 file(GLOB SOURCES "src/*.cpp")
+file(GLOB HEADERS "src/*.h")
 
-include_directories(src)
+# 添加头文件到可执行文件
+add_executable(Chapter01 ${SOURCES} ${HEADERS})
 
-add_executable(Chapter01 ${SOURCES})
+# 设置包含路径
+target_include_directories(Chapter01 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
