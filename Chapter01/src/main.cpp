@@ -8,13 +8,26 @@
 struct Item {
   explicit Item(const char id) : c(id) {}
   char c;
+
+  friend std::ostream& operator<<(std::ostream& os, const Item& item);
 };
+
+std::ostream& operator<<(std::ostream& os, const Item& item) {
+  os << item.c;
+  return os;
+}
+
+template <typename T, typename... Args>
+T createItem(Args&&... args) {
+  return T(std::forward<Args>(args)...);
+}
+
 
 template <typename T>
 struct Producer {
   void operator()() {
     for (int i = 0; i < 10; i++) {
-      T item('A' + static_cast<char>(i));
+      const T item = createItem<T>('A' + i);
       queue.push(item);
       std::this_thread::sleep_for(std::chrono::milliseconds(delay));
     }
@@ -23,9 +36,9 @@ struct Producer {
   ThreadSaveQueue<T>& queue;
   std::chrono::milliseconds delay;
 
-  Producer(ThreadSaveQueue<T>& queue, const int i)
+  Producer(ThreadSaveQueue<T>& queue, const int delay)
     : queue(queue),
-      delay(std::chrono::milliseconds(i)) {}
+      delay(std::chrono::milliseconds(delay)) {}
 };
 
 template <typename T>
@@ -37,7 +50,7 @@ struct Consumer {
       }
       for (int i = 0; i < 10; i++) {
         const T item = queue.pop();
-        std::cout << item.c << std::endl;
+        std::cout << item << std::endl;
       }
     }
   }
